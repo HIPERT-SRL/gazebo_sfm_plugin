@@ -18,111 +18,51 @@
 /**                                                                    */
 /***********************************************************************/
 
-#ifndef GAZEBO_PLUGINS_PEDESTRIANSFMPLUGIN_HH_
-#define GAZEBO_PLUGINS_PEDESTRIANSFMPLUGIN_HH_
+#pragma once
 
 // C++
 #include <algorithm>
+#include <memory>
 #include <string>
 #include <vector>
 
 // Gazebo
-#include "gazebo/common/Plugin.hh"
-#include "gazebo/physics/physics.hh"
-#include "gazebo/util/system.hh"
+#include <gz/sim/Entity.hh>
+#include <gz/sim/System.hh>
+#include <gz/utils/ImplPtr.hh>
+#include <sdf/sdf.hh>
 
 // Social Force Model
 #include <lightsfm/sfm.hpp>
 
-namespace gazebo {
-class GZ_PLUGIN_VISIBLE PedestrianSFMPlugin : public ModelPlugin {
-  /// \brief Constructor
-public:
-  PedestrianSFMPlugin();
+namespace gz {
+namespace sim {
+namespace systems {
+class PedestrianSFMPlugin
+  : public gz::sim::System
+  , public gz::sim::ISystemConfigure
+  , public gz::sim::ISystemPreUpdate
+{
+    // \brief Constructor.
+  public:
+    PedestrianSFMPlugin();
 
-  /// \brief Load the actor plugin.
-  /// \param[in] _model Pointer to the parent model.
-  /// \param[in] _sdf Pointer to the plugin's SDF elements.
-public:
-  virtual void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf);
+    /// \brief Destructor.
+    ~PedestrianSFMPlugin() override = default;
 
-  // Documentation Inherited.
-public:
-  virtual void Reset();
+    // Documentation inherited.
+    void Configure(const gz::sim::Entity& _entity,
+                   const std::shared_ptr<const sdf::Element>& _sdf,
+                   gz::sim::EntityComponentManager& _ecm,
+                   gz::sim::EventManager& _eventMgr) override;
 
-  /// \brief Function that is called every update cycle.
-  /// \param[in] _info Timing information
-private:
-  void OnUpdate(const common::UpdateInfo &_info);
+    // Documentation inherited.
+    void PreUpdate(const gz::sim::UpdateInfo& _info,
+                   gz::sim::EntityComponentManager& _ecm) override;
 
-  // private: void InitializePedestrians();
-
-  /// \brief Helper function to detect the closest obstacles.
-private:
-  void HandleObstacles();
-
-  /// \brief Helper function to detect the nearby pedestrians (other actors).
-private:
-  void HandlePedestrians();
-
-  //-------------------------------------------------
-
-  /// \brief this actor as a SFM agent
-private:
-  sfm::Agent sfmActor;
-
-  /// \brief names of the other models in my walking group.
-private:
-  std::vector<std::string> groupNames;
-
-  /// \brief vector of pedestrians detected.
-private:
-  std::vector<sfm::Agent> otherActors;
-
-  /// \brief Maximum distance to detect nearby pedestrians.
-private:
-  double peopleDistance;
-
-  /// \brief Pointer to the parent actor.
-private:
-  physics::ActorPtr actor;
-
-  /// \brief Pointer to the world, for convenience.
-private:
-  physics::WorldPtr world;
-
-  /// \brief Pointer to the sdf element.
-private:
-  sdf::ElementPtr sdf;
-
-  /// \brief Velocity of the actor
-private:
-  ignition::math::Vector3d velocity;
-
-  /// \brief List of connections
-private:
-  std::vector<event::ConnectionPtr> connections;
-
-  /// \brief Time scaling factor. Used to coordinate translational motion
-  /// with the actor's walking animation.
-private:
-  double animationFactor = 1.0;
-
-  /// \brief Time of the last update.
-private:
-  common::Time lastUpdate;
-
-  /// \brief List of models to ignore. Used for vector field
-private:
-  std::vector<std::string> ignoreModels;
-
-  /// \brief Animation name of this actor
-private:
-  std::string animationName;
-
-  /// \brief Custom trajectory info.
-private:
-  physics::TrajectoryInfoPtr trajectoryInfo;
+    /// \brief Private data pointer.
+    GZ_UTILS_UNIQUE_IMPL_PTR(dataPtr)
 };
-} // namespace gazebo
-#endif
+} // namespace gz
+} // namespace sim
+} // namespace systems
